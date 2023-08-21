@@ -1,0 +1,22 @@
+---
+- name: Get Service Status
+  hosts: all
+  become: true
+  become_user: "{{ANSIBLE_SVCACCOUNT}}"
+  become_method: community.general.sudosu
+  gather_facts: no
+  vars:
+    ansible_user: '{{ lookup("env", "ANSIBLE_USER") }}'
+    ansible_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_become_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_remote_tmp: '/tmp'
+    # service: '{{ lookup("env", "SERVICE") }}'
+
+  tasks:
+    - name: Check the service status
+      ansible.builtin.shell: "sudo systemctl status {{SERVICE}}| grep -i active"
+      register: service_state
+
+    - name: Display the service status
+      debug:
+        var: service_state.stdout 

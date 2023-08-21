@@ -1,0 +1,20 @@
+---
+- name: Start Service
+  hosts: all
+  become: true
+  become_user: "{{ANSIBLE_SVCACCOUNT}}"
+  become_method: community.general.sudosu
+  vars:
+    ansible_user: '{{ lookup("env", "ANSIBLE_USER") }}'
+    ansible_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_become_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_remote_tmp: '/tmp'
+    # service: '{{ lookup("env", "SERVICE") }}'
+  tasks:
+    - name: Get list of services
+      shell: "systemctl list-unit-files --type=service --no-legend --no-pager | grep {{SERVICE}}"
+      register: service_list
+
+    - name: Display service list
+      debug:
+        var: service_list.stdout

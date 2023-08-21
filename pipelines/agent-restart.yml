@@ -1,0 +1,24 @@
+---
+- name: Restart {{SERVICE}}
+  hosts: all
+  become: true
+  become_user: "{{ANSIBLE_SVCACCOUNT}}"
+  become_method: community.general.sudosu
+  vars:
+    ansible_user: '{{ lookup("env", "ANSIBLE_USER") }}'
+    ansible_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_become_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_remote_tmp: '/tmp'
+
+
+  tasks:
+    - name: Rstarting the service
+      ansible.builtin.shell: sudo systemctl restart {{SERVICE}}
+      
+    - name: Service status
+      ansible.builtin.shell: "sudo systemctl status {{SERVICE}} |grep -i active"
+      register: service_state
+
+    - name: display status
+      debug:
+        var: service_state.stdout

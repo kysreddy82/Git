@@ -1,0 +1,42 @@
+---
+- name: PENSIEVE AGENT CONFIGURATION UPDATE
+  hosts: all
+  become: true
+  become_user: "{{ANSIBLE_SVCACCOUNT}}"
+  become_method: community.general.sudosu
+  vars:
+    ansible_user: '{{ lookup("env", "ANSIBLE_USER") }}'
+    ansible_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_become_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_remote_tmp: '/tmp'
+    # service: '{{ lookup("env", "SERVICE") }}'
+  tasks:
+    - name: "Copying updated configurations to /opt/pensieve/pensieve-agent/etc/"
+      ansible.builtin.copy:
+        src:  "{{ item }}"
+        dest: /opt/pensieve/pensieve-agent/etc/
+        owner: grafana
+        group: grafana
+        mode: u=rwx,g=rw,o=r
+      with_fileglob:
+        - "{{playbook_dir}}/../../agent-configurations/{{app}}/{{inventory_hostname}}/*.yml"
+      
+    - name: "Stopping the service"
+      ansible.builtin.shell: sudo systemctl restart "{{SERVICE}}"
+      #   name: "{{SERVICE}}"
+      #   state: stopped
+      # become: yes
+      # become_method: sudo
+
+    - name: 
+      ansible.builtin.shell: sudo systemctl status "{{SERVICE}}" | grep -i active
+      #   name: "{{SERVICE}}"
+      #   state: started
+      register: service_status
+      # become: yes
+      # become_method: sudo
+
+    - name: "Display the service status"
+      debug:
+        var: service_status.stdout
+        

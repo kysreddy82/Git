@@ -1,0 +1,43 @@
+---
+- name: Start Service
+  hosts: all
+  become: true
+  become_user: root
+  become_method: community.general.sudosu
+  vars:
+    ansible_user: '{{ lookup("env", "ANSIBLE_USER") }}'
+    ansible_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_become_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_remote_tmp: '/tmp'
+    # service: '{{ lookup("env", "SERVICE") }}'
+  tasks:
+    - name: Modify ExecStart line
+      lineinfile:
+        path: /etc/systemd/system/{{SERVICE}}
+        regexp: '^ExecStart='
+        line: 'ExecStart=/bin/sh -c "/opt/pensieve/pensieve-agent/grafana-agent/grafana-agent-linux-amd64 --config.file=/opt/pensieve/pensieve-agent/grafana-agent/grafana-agent-config.yaml >>/opt/pensieve/pensieve-agent/logs/grafana-agent.log 2>&1 &"'
+
+    - name: Modify User line
+      lineinfile:
+        path: /etc/systemd/system/{{SERVICE}}
+        regexp: '^User='
+        line: 'User=grafana'
+      
+    - name: Modify Type line
+      lineinfile:
+        path: /etc/systemd/system/{{SERVICE}}
+        regexp: '^Type='
+        line: 'Type=forking'
+
+    - name: Modify Working Directory line
+      lineinfile:
+        path: /etc/systemd/system/{{SERVICE}}
+        regexp: '^WorkingDirectory='
+        line: 'WorkingDirectory=/opt/pensieve/pensieve-agent/grafana-agent'
+
+    - name: Reload systemd configuration
+      systemd:
+        daemon_reload: yes
+        state: restarted
+        name: "{{SERVICE}}"
+  

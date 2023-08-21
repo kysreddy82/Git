@@ -1,0 +1,54 @@
+---
+- name: Pensieve Logrotate
+  hosts: all
+  become: true
+  become_user: root
+  become_method: community.general.sudosu
+  vars:
+    ansible_user: '{{ lookup("env", "ANSIBLE_USER") }}'
+    ansible_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_become_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_remote_tmp: '/tmp'
+    cron_path: /etc/cron.d/pensieve-logrotate
+    cron_content: |
+      1 * * * * root /usr/sbin/logrotate -f /etc/logrotate.d/pensieve-lograte --state /opt/pensieve/pensieve-agent/logs/pensieve-logrotate.status >/dev/null 2>&1
+    logrotate_path: /opt/pensieve/pensieve-agent/etc/pensieve-lograte
+    logrotate_content: |
+      /opt/pensieve/pensieve-agent/logs/*.log {
+      missingok
+      rotate 1
+      compress 
+      create 0660 grafana root
+      postrotate
+      systemctl restart pensieve-grafana-agent
+      endscript
+      }
+ 
+    # service: '{{ lookup("env", "SERVICE") }}'
+  tasks:
+    - name: Create file under logrotate 
+      file:
+        path: "{{ logrotate_path }}"
+        state: touch
+      # become: yes
+
+    - name: copy content to logrotate file
+      copy:
+        dest: "{{ logrotate_path}}"
+        content: "{{ logrotate_content }}"
+      # become: yes
+
+    - name: Create file under Cron 
+      file:
+        path: "{{ cron_path }}"
+        state: touch
+      # become: yes
+
+    - name: copy content to Cron file
+      copy:
+        dest: "{{ cron_path}}"
+        content: "{{ cron_content }}"
+      # become: yes
+
+    - name: Creating link
+      shell: "ln -s /opt/pensieve/pensieve-agent/etc/pensieve-lograte /etc/logrotate.d/pensieve-lograte"

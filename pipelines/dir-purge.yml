@@ -1,0 +1,48 @@
+---
+- name: Purge pensieve wal directory
+  hosts: all
+  become: true
+  become_user: "{{SVCACCOUNT}}"
+  become_method: community.general.sudosu
+  vars:
+    ansible_user: '{{ lookup("env", "ANSIBLE_USER") }}'
+    ansible_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_become_password: '{{ lookup("env", "ANSIBLE_PASSWORD") }}'
+    ansible_remote_tmp: '/tmp'
+    # service: '{{ lookup("env", "SERVICE") }}'
+  tasks:
+    - name: Stop the service
+      shell: "sudo systemctl stop {{SERVICE}}"
+        # name: "{{SERVICE}}"
+        # state: stopped
+      # become: true
+      # become_user: root
+      # become_method: sudo
+
+    - name: Clearing grafana log directory
+      shell: "rm -rf /opt/pensieve/pensieve-agent/grafana-agent-wal/*"
+      register: service_list
+
+
+    - name: Validating files under grafana log directory
+      shell: "ls -l /opt/pensieve/pensieve-agent/grafana-agent-wal/"
+      register: service_list
+
+    - name: Display files under /opt/pensieve/pensieve-agent/grafana-agent-wal/
+      debug:
+        var: service_list.stdout
+    
+    - name: Starting the service
+      shell: "sudo systemctl start {{SERVICE}}"
+        # state: started
+        # become: true
+      # become_user: root
+      # become_method: sudo
+
+    - name: status the service
+      shell: "sudo systemctl status {{SERVICE}}| grep -i active"
+      register: service_state
+
+    - name: Display service state
+      debug:
+        var: service_state.stdout     
