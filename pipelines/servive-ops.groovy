@@ -1,9 +1,7 @@
 pipeline {
   agent {
 	    docker {
-	        image 'cretestacr01.azurecr.io/cre-ansible:latest'
-            registryUrl 'https://cretestacr01.azurecr.io'
-            registryCredentialsId 'cretestacr01-creds'
+	        
             args '-u 0 --dns 10.0.10.68 --dns 10.0.10.50 --dns 10.0.10.150'
 	    }
   }
@@ -25,10 +23,10 @@ pipeline {
       steps {
           checkout scm: [
                   $class: 'GitSCM',
-                  branches: [[name: '*/Pensieve-additional-configs']],
+                  branches: [[name: '*/-configs']],
                   userRemoteConfigs: [[
                       credentialsId: 'github-checkout-pat',
-                      url: 'https://github.com/GIT-Global/cre-techops-pensieve.git'
+                      url: 'https://githubt'
                   ]]
           ]
       }
@@ -39,7 +37,7 @@ pipeline {
                     ansible-playbook \
                         -e 'ANSIBLE_PORT=${params.PORT} app=${params.APP} SERVICE=${params.SERVICE} ANSIBLE_SVCACCOUNT=${params.SVCACCOUNT}' \
                         -i '${params.INVENTORY},' \
-                        'non-production/pipelines/pensieve-ops/pensieve-agent-${params.ACTION}.yml'
+                        '/pipelines/t-${params.ACTION}.yml'
                 """
             }
         }
