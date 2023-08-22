@@ -1,6 +1,9 @@
 ---
 - name: Get Service Status
   hosts: all
+   vars:
+    ansible_user: 'ansible'
+    ansible_password: 'root1234@'
 
 
   tasks:
