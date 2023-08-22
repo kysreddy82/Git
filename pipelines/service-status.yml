@@ -5,7 +5,7 @@
 
   tasks:
     - name: Check the service status
-      ansible.builtin.shell: "service cron status | grep -i running"
+      ansible.builtin.shell: "sudo service cron status "
       register: service_state
 
     - name: Display the service status
